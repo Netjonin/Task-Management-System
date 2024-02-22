@@ -12,5 +12,5 @@ type Task struct {
 	Status      string    `json:"status"`
 	ExpiredAt   time.Time `json:"expired_at"`
 	Expired     bool      `json:"expired"`
-	Version     int32     `json:"version"`
+	Version     int32     `json:"version,string"`
 }
