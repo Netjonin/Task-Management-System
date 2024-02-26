@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -12,13 +11,13 @@ import (
 func (app *application) createTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		Title       string    `json:"title"`
-		Description string    `json:"description,omitempty"`
-		Status      string    `json:"status"`
-		Expired     bool      `json:"expired"`
+		Title       string `json:"title"`
+		Description string `json:"description,omitempty"`
+		Status      string `json:"status"`
+		Expired     bool   `json:"expired"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&input)
+	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 		return
