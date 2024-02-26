@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,7 +10,21 @@ import (
 )
 
 func (app *application) createTaskHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "create a new movie")
+
+	var input struct {
+		Title       string    `json:"title"`
+		Description string    `json:"description,omitempty"`
+		Status      string    `json:"status"`
+		Expired     bool      `json:"expired"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	fmt.Fprintf(w, "%+v\n", input)
+
 }
 
 func (app *application) showTaskHandler(w http.ResponseWriter, r *http.Request) {
