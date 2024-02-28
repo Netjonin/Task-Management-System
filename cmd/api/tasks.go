@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
+	
 
 	"TMS.netjonin.net/internal/data"
 	"TMS.netjonin.net/internal/validator"
 )
+
+var task *data.Task
 
 func (app *application) createTaskHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -50,16 +52,34 @@ func (app *application) showTaskHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	task := data.Task{
-		ID:          id,
-		Title:       "Laundry",
-		Description: "Laundry",
-		CreatedAt:   time.Now(),
-		Status:      "To-Do",
-		ExpiredAt:   time.Now().Local().Add(time.Hour * 12),
-		Expired:     false,
-		Version:     1,
+	// task := data.Task{
+	// 	ID:          id,
+	// 	Title:       "Laundry",
+	// 	Description: "Laundry",
+	// 	CreatedAt:   time.Now(),
+	// 	Status:      "To-Do",
+	// 	ExpiredAt:   time.Now().Local().Add(time.Hour * 12),
+	// 	Expired:     false,
+	// 	Version:     1,
+	// }
+
+	for _, v := range store {
+		if v.ID == id {
+			task = &data.Task{
+				ID: v.ID,
+				Title: v.Title,
+				Description: v.Description,
+				CreatedAt: v.CreatedAt,
+				Status: v.Status,
+				ExpiredAt: v.ExpiredAt,
+				Expired: v.Expired,
+				Version: v.Version,
+			}
+
+		}
 	}
+
+
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"task": task}, nil)
 	if err != nil {
