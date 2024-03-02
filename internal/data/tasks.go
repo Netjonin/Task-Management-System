@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"time"
 
 	"TMS.netjonin.net/internal/validator"
@@ -35,3 +36,25 @@ func ValidateTask(v *validator.Validator, task *Task) {
 	// v.Check(len(input.Genres) <= 5, "genres", "must not contain more than 5 genres")
 	// v.Check(validator.Unique(input.Genres), "genres", "must not contain duplicate values")
 }
+
+type TaskModel struct {
+	DB *sql.DB
+}
+
+func (t TaskModel) Insert(task *Task) error {
+	return nil
+}
+
+func (t TaskModel) Get(id int64) (*Task, error) {
+	return nil, nil
+}
+
+func (t TaskModel) Update(task *Task) error {
+	return nil
+}
+
+func (t TaskModel) Delete(id int64) error {
+	return nil
+}
+
+
