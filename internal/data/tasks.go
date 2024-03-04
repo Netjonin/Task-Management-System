@@ -62,7 +62,7 @@ func (t TaskModel) Get(id int64) (*Task, error) {
 	}
 
 	query := `
-	SELECT id, title, description, status, , created_at, expired_at, version
+	SELECT id, title, description, status, created_at, expired_at, version
 	FROM tasks
 	WHERE id = $1`
 

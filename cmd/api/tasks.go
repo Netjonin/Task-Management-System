@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"TMS.netjonin.net/internal/validator"
 )
 
-var task *data.Task
+//var task *data.Task
 
 func (app *application) createTaskHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -68,25 +69,34 @@ func (app *application) showTaskHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	for _, v := range store {
-		if v.ID == id {
-			task = &data.Task{
-				ID:          v.ID,
-				Title:       v.Title,
-				Description: v.Description,
-				CreatedAt:   v.CreatedAt,
-				Status:      v.Status,
-				ExpiredAt:   v.ExpiredAt,
-				Expired:     v.Expired,
-				Version:     v.Version,
-			}
+	// for _, v := range store {
+	// 	if v.ID == id {
+	// 		task = &data.Task{
+	// 			ID:          v.ID,
+	// 			Title:       v.Title,
+	// 			Description: v.Description,
+	// 			CreatedAt:   v.CreatedAt,
+	// 			Status:      v.Status,
+	// 			ExpiredAt:   v.ExpiredAt,
+	// 			Expired:     v.Expired,
+	// 			Version:     v.Version,
+	// 		}
 
+	// 	}
+	// }
+
+	task, err := app.models.Tasks.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
 		}
+		return
 	}
-
 	err = app.writeJSON(w, http.StatusOK, envelope{"task": task}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
-
 	}
 }
