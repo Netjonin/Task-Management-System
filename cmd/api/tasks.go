@@ -14,10 +14,11 @@ var task *data.Task
 func (app *application) createTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		Title       string `json:"title"`
-		Description string `json:"description,omitempty"`
-		Status      string `json:"status"`
-		Expired     bool   `json:"expired"`
+		Title       string    `json:"title"`
+		Description string    `json:"description,omitempty"`
+		Status      string    `json:"status"`
+		ExpiredAt   time.Time `json:"expired_at"`
+		Expired     bool      `json:"expired"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -25,16 +26,13 @@ func (app *application) createTaskHandler(w http.ResponseWriter, r *http.Request
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	num := len(store) + 1
+	//num := len(store) + 1
 	task := &data.Task{
-		ID:          int64(num),
 		Title:       input.Title,
 		Description: input.Description,
-		CreatedAt:   time.Now(),
 		Status:      input.Status,
-		ExpiredAt:   time.Now().Add(time.Duration(4)),
+		ExpiredAt:   input.ExpiredAt,
 		Expired:     input.Expired,
-		Version:     1,
 	}
 
 	v := validator.New()
@@ -43,9 +41,22 @@ func (app *application) createTaskHandler(w http.ResponseWriter, r *http.Request
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
+	// store[num] = *task
+	// fmt.Fprintf(w, "%+v\n", len(store))
 
-	store[num] = *task
-	fmt.Fprintf(w, "%+v\n", len(store))
+	err = app.models.Tasks.Insert(task)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/tasks/%d", task.ID))
+	err = app.writeJSON(w, http.StatusCreated, envelope{"task": task}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 
 }
 

@@ -2,9 +2,11 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"TMS.netjonin.net/internal/validator"
+	//"github.com/lib/pq"
 )
 
 type Task struct {
@@ -42,11 +44,50 @@ type TaskModel struct {
 }
 
 func (t TaskModel) Insert(task *Task) error {
-	return nil
+
+	query := `
+      INSERT INTO tasks (title, description, status, expired_at, expired)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, created_at, version`
+
+	//args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
+	args := []any{task.Title, task.Description, task.Status, task.ExpiredAt, task.Expired}
+	return t.DB.QueryRow(query, args...).Scan(&task.ID, &task.CreatedAt, &task.Version)
 }
 
 func (t TaskModel) Get(id int64) (*Task, error) {
-	return nil, nil
+
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+	SELECT id, title, description, status, , created_at, expired_at, version
+	FROM tasks
+	WHERE id = $1`
+
+	var task Task
+
+	err := t.DB.QueryRow(query, id).Scan(
+		&task.ID,
+		&task.Title,
+		&task.Description,
+		&task.Status,
+		&task.CreatedAt,
+		//pq.Array(&movie.Genres),
+		&task.ExpiredAt,
+		&task.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &task, nil
 }
 
 func (t TaskModel) Update(task *Task) error {
@@ -56,5 +97,3 @@ func (t TaskModel) Update(task *Task) error {
 func (t TaskModel) Delete(id int64) error {
 	return nil
 }
-
-
