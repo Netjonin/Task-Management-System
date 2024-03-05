@@ -100,3 +100,59 @@ func (app *application) showTaskHandler(w http.ResponseWriter, r *http.Request) 
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) updateTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	task, err := app.models.Tasks.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	var input struct {
+		Title       string    `json:"title"`
+		Description string    `json:"description"`
+		Status      string    `json:"status"`
+		Expired     bool      `json:"expired"`
+		ExpiredAt   time.Time `json:"expired_at"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	// Copy the values from the request body to the appropriate fields of the movie
+	// record.
+	task.Title = input.Title
+	task.Description = input.Description
+	task.Status = input.Status
+	task.Expired = input.Expired
+	task.ExpiredAt = input.ExpiredAt
+
+	v := validator.New()
+
+	if data.ValidateTask(v, task); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Tasks.Update(task)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	err = app.writeJSON(w, http.StatusOK, envelope{"task": task}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}

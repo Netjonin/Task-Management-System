@@ -91,7 +91,23 @@ func (t TaskModel) Get(id int64) (*Task, error) {
 }
 
 func (t TaskModel) Update(task *Task) error {
-	return nil
+
+	query := `
+        UPDATE tasks
+        SET title = $1, description = $2, status = $3, expired = $4, expired_at = $5, version = version + 1
+        WHERE id = $6
+        RETURNING version`
+
+	args := []any{
+		task.Title,
+		task.Description,
+		task.Status,
+		//pq.Array(movie.Genres),
+		task.Expired,
+		task.ExpiredAt,
+		task.ID,
+	}
+	return t.DB.QueryRow(query, args...).Scan(&task.Version)
 }
 
 func (t TaskModel) Delete(id int64) error {
