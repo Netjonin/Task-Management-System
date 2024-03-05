@@ -27,6 +27,7 @@ func ValidateTask(v *validator.Validator, task *Task) {
 	v.Check(task.Description != "", "description", "must be provided")
 	v.Check(!task.Expired, "expired", "newly created task should be active")
 	v.Check(task.Status != "", "status", "newly created task should be in To-Do")
+	v.Check(task.ExpiredAt.IsZero(), "expired_at", "must be provided")
 
 	// v.Check(input.Year != 0, "year", "must be provided")
 	// v.Check(input.Year >= 1888, "year", "must be greater than 1888")
@@ -117,12 +118,12 @@ func (t TaskModel) Delete(id int64) error {
 	query := `
 	DELETE FROM tasks
 	WHERE id = $1`
-	
+
 	result, err := t.DB.Exec(query, id)
 	if err != nil {
 		return err
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err

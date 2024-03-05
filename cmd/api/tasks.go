@@ -118,12 +118,14 @@ func (app *application) updateTaskHandler(w http.ResponseWriter, r *http.Request
 		}
 		return
 	}
+
+	// Use pointers for partial updates
 	var input struct {
-		Title       string    `json:"title"`
-		Description string    `json:"description"`
-		Status      string    `json:"status"`
-		Expired     bool      `json:"expired"`
-		ExpiredAt   time.Time `json:"expired_at"`
+		Title       *string    `json:"title"`
+		Description *string    `json:"description"`
+		Status      *string    `json:"status"`
+		Expired     *bool      `json:"expired"`
+		ExpiredAt   *time.Time `json:"expired_at"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -132,11 +134,35 @@ func (app *application) updateTaskHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	task.Title = input.Title
-	task.Description = input.Description
-	task.Status = input.Status
-	task.Expired = input.Expired
-	task.ExpiredAt = input.ExpiredAt
+	// It is nil if it is not provided in the request
+	if input.Title != nil {
+		task.Title = *input.Title
+	}
+
+	// It is nil if it is not provided in the request
+	if input.Description != nil {
+		task.Description = *input.Description
+	}
+
+	// It is nil if it is not provided in the request
+	if input.Status != nil {
+		task.Status = *input.Status
+	}
+
+	// It is nil if it is not provided in the request
+	if input.Expired != nil {
+		task.Expired = *input.Expired
+	}
+
+	// It is nil if it is not provided in the request
+	if input.ExpiredAt != nil {
+		task.ExpiredAt = *input.ExpiredAt
+	}
+	// task.Title = input.Title
+	// task.Description = input.Description
+	// task.Status = input.Status
+	// task.Expired = input.Expired
+	// task.ExpiredAt = input.ExpiredAt
 
 	v := validator.New()
 
@@ -162,7 +188,7 @@ func (app *application) deleteTaskHandler(w http.ResponseWriter, r *http.Request
 		app.notFoundResponse(w, r)
 		return
 	}
-	
+
 	err = app.models.Tasks.Delete(id)
 	if err != nil {
 		switch {
