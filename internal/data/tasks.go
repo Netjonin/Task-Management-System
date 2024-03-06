@@ -27,7 +27,7 @@ func ValidateTask(v *validator.Validator, task *Task) {
 	v.Check(task.Description != "", "description", "must be provided")
 	v.Check(!task.Expired, "expired", "newly created task should be active")
 	v.Check(task.Status != "", "status", "newly created task should be in To-Do")
-	v.Check(task.ExpiredAt.IsZero(), "expired_at", "must be provided")
+	//v.Check(task.ExpiredAt.IsZero(), "expired_at", "must be provided")
 
 	// v.Check(input.Year != 0, "year", "must be provided")
 	// v.Check(input.Year >= 1888, "year", "must be greater than 1888")
@@ -92,11 +92,11 @@ func (t TaskModel) Get(id int64) (*Task, error) {
 }
 
 func (t TaskModel) Update(task *Task) error {
-
+	// version added to the query for optimistic concurrency control
 	query := `
         UPDATE tasks
         SET title = $1, description = $2, status = $3, expired = $4, expired_at = $5, version = version + 1
-        WHERE id = $6
+        WHERE id = $6 AND version = $7
         RETURNING version`
 
 	args := []any{
@@ -107,8 +107,18 @@ func (t TaskModel) Update(task *Task) error {
 		task.Expired,
 		task.ExpiredAt,
 		task.ID,
+		task.Version,
 	}
-	return t.DB.QueryRow(query, args...).Scan(&task.Version)
+	err := t.DB.QueryRow(query, args...).Scan(&task.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 func (t TaskModel) Delete(id int64) error {
