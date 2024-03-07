@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -53,7 +54,13 @@ func (t TaskModel) Insert(task *Task) error {
 
 	//args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
 	args := []any{task.Title, task.Description, task.Status, task.ExpiredAt, task.Expired}
-	return t.DB.QueryRow(query, args...).Scan(&task.ID, &task.CreatedAt, &task.Version)
+
+	// Create a context with a 3-second timeout.
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return t.DB.QueryRowContext(ctx, query, args...).Scan(&task.ID, &task.CreatedAt, &task.Version)
 }
 
 func (t TaskModel) Get(id int64) (*Task, error) {
@@ -69,7 +76,12 @@ func (t TaskModel) Get(id int64) (*Task, error) {
 
 	var task Task
 
-	err := t.DB.QueryRow(query, id).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	// QueryRow is used when sql query timeouts is ignored
+	err := t.DB.QueryRowContext(ctx, query, id).Scan(
 		&task.ID,
 		&task.Title,
 		&task.Description,
@@ -109,7 +121,11 @@ func (t TaskModel) Update(task *Task) error {
 		task.ID,
 		task.Version,
 	}
-	err := t.DB.QueryRow(query, args...).Scan(&task.Version)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := t.DB.QueryRowContext(ctx, query, args...).Scan(&task.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -129,7 +145,10 @@ func (t TaskModel) Delete(id int64) error {
 	DELETE FROM tasks
 	WHERE id = $1`
 
-	result, err := t.DB.Exec(query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := t.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
