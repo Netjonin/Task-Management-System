@@ -209,3 +209,44 @@ func (app *application) deleteTaskHandler(w http.ResponseWriter, r *http.Request
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) listTasksHandler(w http.ResponseWriter, r *http.Request) {
+	// var input struct {
+	// 	Title    string
+	// 	Genres   []string
+	// 	Page     int
+	// 	PageSize int
+	// 	Sort     string
+	// }
+
+	var input struct {
+		Title       string
+		Description string
+		Status      string
+		Page        int
+		PageSize    int
+		Sort        string
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = app.readString(qs, "title", "")
+	//input.Genres = app.readCSV(qs, "genres", []string{})
+	input.Description = app.readString(qs, "description", "")
+	input.Status = app.readString(qs, "status", "")
+	
+
+	input.Page = app.readInt(qs, "page", 1, v)
+	input.PageSize = app.readInt(qs, "page_size", 20, v)
+
+	input.Sort = app.readString(qs, "sort", "id")
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
+}
