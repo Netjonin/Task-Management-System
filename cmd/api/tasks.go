@@ -242,10 +242,18 @@ func (app *application) listTasksHandler(w http.ResponseWriter, r *http.Request)
 
 	input.SortSafelist = []string{"id", "title", "description", "status", "-id", "-title", "-description", "-status"}
 
-	if  data.ValidateFilters(v, input.Filters); !v.Valid() {
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-
-	fmt.Fprintf(w, "%+v\n", input)
+	tasks, err := app.models.Tasks.GetAll(input.Title, input.Filters)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	
+	err = app.writeJSON(w, http.StatusOK, envelope{"tasks": tasks}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }

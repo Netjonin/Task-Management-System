@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"TMS.netjonin.net/internal/validator"
+	_"github.com/lib/pq"
 	//"github.com/lib/pq"
 )
 
@@ -161,4 +162,52 @@ func (t TaskModel) Delete(id int64) error {
 		return ErrRecordNotFound
 	}
 	return nil
+}
+
+//func (t TaskModel) GetAll(title string, genres []string, filters Filters)
+func (t TaskModel) GetAll(title string, filters Filters) ([]*Task, error) {
+	
+	query := `
+	SELECT id, title, description, created_at, status, expired_at, 
+	expired, version FROM tasks
+	ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	
+	rows, err := t.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	
+	defer rows.Close()
+	
+	tasks := []*Task{}
+	
+	for rows.Next() {
+		
+		var task Task
+		
+		err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.Description,
+			&task.CreatedAt,
+			&task.Status,
+			&task.ExpiredAt,
+			&task.Expired,
+			&task.Version,
+			//pq.Array(&movie.Genres),
+		)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, &task)
+	}
+	
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	
+	return tasks, nil
 }
