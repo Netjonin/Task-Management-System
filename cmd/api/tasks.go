@@ -223,9 +223,7 @@ func (app *application) listTasksHandler(w http.ResponseWriter, r *http.Request)
 		Title       string
 		Description string
 		Status      string
-		Page        int
-		PageSize    int
-		Sort        string
+		data.Filters
 	}
 
 	v := validator.New()
@@ -236,14 +234,15 @@ func (app *application) listTasksHandler(w http.ResponseWriter, r *http.Request)
 	//input.Genres = app.readCSV(qs, "genres", []string{})
 	input.Description = app.readString(qs, "description", "")
 	input.Status = app.readString(qs, "status", "")
-	
 
 	input.Page = app.readInt(qs, "page", 1, v)
 	input.PageSize = app.readInt(qs, "page_size", 20, v)
 
 	input.Sort = app.readString(qs, "sort", "id")
 
-	if !v.Valid() {
+	input.SortSafelist = []string{"id", "title", "description", "status", "-id", "-title", "-description", "-status"}
+
+	if  data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
