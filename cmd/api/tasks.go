@@ -246,7 +246,7 @@ func (app *application) listTasksHandler(w http.ResponseWriter, r *http.Request)
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	tasks, err := app.models.Tasks.GetAll(input.Title, input.Filters)
+	tasks, err := app.models.Tasks.GetAll(input.Title, input.Description, input.Status, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
