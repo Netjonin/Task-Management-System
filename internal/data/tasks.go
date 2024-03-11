@@ -166,14 +166,25 @@ func (t TaskModel) Delete(id int64) error {
 
 //func (t TaskModel) GetAll(title string, genres []string, filters Filters)
 func (t TaskModel) GetAll(title string, description string, status string, filters Filters) ([]*Task, error) {
-	
+	//to_tsvector('simple', title) -  function takes a movie title and splits it into lexemes with simple config as lowercase
+	//plainto_tsquery('simple', $1) - splits this into formatted query such as "The Club" resulting into 'the' & 'club'
+	//@@ is a match operator
+
 	query := `
 	SELECT id, title, description, created_at, status, expired_at, 
 	expired, version FROM tasks
-	WHERE (LOWER(title) = LOWER($1) OR $1 = '')
-	AND (LOWER(description) = LOWER($2) OR $2 = '')
-	AND (LOWER(status) = LOWER($3) OR $3 = '')
+	WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
+	AND (to_tsvector('simple', description) @@ plainto_tsquery('simple', $2) OR $2 = '')
+	AND (to_tsvector('simple', status) @@ plainto_tsquery('simple', $3) OR $3 = '')
 	ORDER BY id`
+
+	// query := `
+	// SELECT id, title, description, created_at, status, expired_at, 
+	// expired, version FROM tasks
+	// WHERE (LOWER(title) = LOWER($1) OR $1 = '')
+	// AND (LOWER(description) = LOWER($2) OR $2 = '')
+	// AND (LOWER(status) = LOWER($3) OR $3 = '')
+	// ORDER BY id`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
