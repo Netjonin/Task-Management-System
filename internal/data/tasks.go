@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"TMS.netjonin.net/internal/validator"
-	_"github.com/lib/pq"
+	_ "github.com/lib/pq"
 	//"github.com/lib/pq"
 )
 
@@ -170,13 +171,13 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 	//plainto_tsquery('simple', $1) - splits this into formatted query such as "The Club" resulting into 'the' & 'club'
 	//@@ is a match operator
 
-	query := `
+	query := fmt.Sprintf(`
 	SELECT id, title, description, created_at, status, expired_at, 
 	expired, version FROM tasks
 	WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 	AND (to_tsvector('simple', description) @@ plainto_tsquery('simple', $2) OR $2 = '')
 	AND (to_tsvector('simple', status) @@ plainto_tsquery('simple', $3) OR $3 = '')
-	ORDER BY id`
+	ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortDirection())
 
 	// query := `
 	// SELECT id, title, description, created_at, status, expired_at, 
