@@ -166,13 +166,14 @@ func (t TaskModel) Delete(id int64) error {
 }
 
 //func (t TaskModel) GetAll(title string, genres []string, filters Filters)
-func (t TaskModel) GetAll(title string, description string, status string, filters Filters) ([]*Task, error) {
+func (t TaskModel) GetAll(title string, description string, status string, filters Filters) ([]*Task,  Metadata, error) {
 	//to_tsvector('simple', title) -  function takes a movie title and splits it into lexemes with simple config as lowercase
 	//plainto_tsquery('simple', $1) - splits this into formatted query such as "The Club" resulting into 'the' & 'club'
 	//@@ is a match operator
 
+	// count(*) OVER(): to count all the qualifying filtered rows to get total_records
 	query := fmt.Sprintf(`
-	SELECT id, title, description, created_at, status, expired_at, 
+	SELECT count(*) OVER(), id, title, description, created_at, status, expired_at, 
 	expired, version FROM tasks
 	WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 	AND (to_tsvector('simple', description) @@ plainto_tsquery('simple', $2) OR $2 = '')
@@ -196,10 +197,12 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 	//rows, err := t.DB.QueryContext(ctx, query, title, description, status)
 	rows, err := t.DB.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 	
 	defer rows.Close()
+
+	totalRecords := 0
 	
 	tasks := []*Task{}
 	
@@ -208,6 +211,7 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 		var task Task
 		
 		err := rows.Scan(
+			&totalRecords,
 			&task.ID,
 			&task.Title,
 			&task.Description,
@@ -219,14 +223,15 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 			//pq.Array(&movie.Genres),
 		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 		tasks = append(tasks, &task)
 	}
 	
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil,  Metadata{}, err
 	}
-	
-	return tasks, nil
+
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+	return tasks, metadata, nil
 }

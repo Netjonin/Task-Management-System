@@ -246,13 +246,13 @@ func (app *application) listTasksHandler(w http.ResponseWriter, r *http.Request)
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	tasks, err := app.models.Tasks.GetAll(input.Title, input.Description, input.Status, input.Filters)
+	tasks, metadata, err := app.models.Tasks.GetAll(input.Title, input.Description, input.Status, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 	
-	err = app.writeJSON(w, http.StatusOK, envelope{"tasks": tasks}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"tasks": tasks, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
