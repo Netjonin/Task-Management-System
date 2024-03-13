@@ -177,7 +177,7 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 	WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 	AND (to_tsvector('simple', description) @@ plainto_tsquery('simple', $2) OR $2 = '')
 	AND (to_tsvector('simple', status) @@ plainto_tsquery('simple', $3) OR $3 = '')
-	ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortDirection())
+	ORDER BY %s %s, id ASC LIMIT $4 OFFSET $5`, filters.sortColumn(), filters.sortDirection())
 
 	// query := `
 	// SELECT id, title, description, created_at, status, expired_at, 
@@ -189,8 +189,12 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+	//args := []any{title, pq.Array(genres), filters.limit(), filters.offset()}
+
+	args := []any{title, description, status, filters.limit(), filters.offset()}
 	
-	rows, err := t.DB.QueryContext(ctx, query, title, description, status)
+	//rows, err := t.DB.QueryContext(ctx, query, title, description, status)
+	rows, err := t.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
