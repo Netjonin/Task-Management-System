@@ -165,8 +165,8 @@ func (t TaskModel) Delete(id int64) error {
 	return nil
 }
 
-//func (t TaskModel) GetAll(title string, genres []string, filters Filters)
-func (t TaskModel) GetAll(title string, description string, status string, filters Filters) ([]*Task,  Metadata, error) {
+// func (t TaskModel) GetAll(title string, genres []string, filters Filters)
+func (t TaskModel) GetAll(title string, description string, status string, filters Filters) ([]*Task, Metadata, error) {
 	//to_tsvector('simple', title) -  function takes a movie title and splits it into lexemes with simple config as lowercase
 	//plainto_tsquery('simple', $1) - splits this into formatted query such as "The Club" resulting into 'the' & 'club'
 	//@@ is a match operator
@@ -181,7 +181,7 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 	ORDER BY %s %s, id ASC LIMIT $4 OFFSET $5`, filters.sortColumn(), filters.sortDirection())
 
 	// query := `
-	// SELECT id, title, description, created_at, status, expired_at, 
+	// SELECT id, title, description, created_at, status, expired_at,
 	// expired, version FROM tasks
 	// WHERE (LOWER(title) = LOWER($1) OR $1 = '')
 	// AND (LOWER(description) = LOWER($2) OR $2 = '')
@@ -193,23 +193,23 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 	//args := []any{title, pq.Array(genres), filters.limit(), filters.offset()}
 
 	args := []any{title, description, status, filters.limit(), filters.offset()}
-	
+
 	//rows, err := t.DB.QueryContext(ctx, query, title, description, status)
 	rows, err := t.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, Metadata{}, err
 	}
-	
+
 	defer rows.Close()
 
 	totalRecords := 0
-	
+
 	tasks := []*Task{}
-	
+
 	for rows.Next() {
-		
+
 		var task Task
-		
+
 		err := rows.Scan(
 			&totalRecords,
 			&task.ID,
@@ -227,9 +227,9 @@ func (t TaskModel) GetAll(title string, description string, status string, filte
 		}
 		tasks = append(tasks, &task)
 	}
-	
+
 	if err = rows.Err(); err != nil {
-		return nil,  Metadata{}, err
+		return nil, Metadata{}, err
 	}
 
 	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)

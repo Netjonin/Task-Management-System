@@ -251,7 +251,7 @@ func (app *application) listTasksHandler(w http.ResponseWriter, r *http.Request)
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	
+
 	err = app.writeJSON(w, http.StatusOK, envelope{"tasks": tasks, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
