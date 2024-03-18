@@ -1,10 +1,10 @@
 package main
 
 import (
-	"errors"
-	"net/http"
 	"TMS.netjonin.net/internal/data"
 	"TMS.netjonin.net/internal/validator"
+	"errors"
+	"net/http"
 )
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
