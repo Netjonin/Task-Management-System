@@ -173,7 +173,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 	var user User
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	
+
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
 		&user.ID,
 		&user.CreatedAt,
