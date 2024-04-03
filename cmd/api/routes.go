@@ -15,11 +15,12 @@ func (app *application) routes() http.Handler {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
-	router.HandlerFunc(http.MethodGet, "/v1/tasks", app.requireActivatedUser(app.listTasksHandler))
-	router.HandlerFunc(http.MethodPost, "/v1/tasks", app.requireActivatedUser(app.createTaskHandler))
-	router.HandlerFunc(http.MethodGet, "/v1/tasks/:id", app.requireActivatedUser(app.showTaskHandler))
-	router.HandlerFunc(http.MethodPatch, "/v1/tasks/:id", app.requireActivatedUser(app.updateTaskHandler))
-	router.HandlerFunc(http.MethodDelete, "/v1/tasks/:id", app.requireActivatedUser(app.deleteTaskHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/tasks", app.requirePermission("tasks:read", app.listTasksHandler))
+	router.HandlerFunc(http.MethodPost, "/v1/tasks", app.requirePermission("tasks:write", app.createTaskHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/tasks/:id", app.requirePermission("tasks:read", app.showTaskHandler))
+	router.HandlerFunc(http.MethodPatch, "/v1/tasks/:id", app.requirePermission("tasks:write", app.updateTaskHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/tasks/:id", app.requirePermission("tasks:write", app.deleteTaskHandler))
+
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
