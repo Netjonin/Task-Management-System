@@ -66,7 +66,8 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
 	//flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://netjonin:pa55word@localhost/databasename", "PostgreSQL DSN")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("TMS_DB_DSN"), "PostgreSQL DSN")
+	//flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("TMS_DB_DSN"), "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
 
 	// Read the connection pool settings from command-line flags into the config struct.
 	// Notice the default values that we're using?
